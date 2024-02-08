@@ -1,6 +1,6 @@
 {
   "history_forecast_ratio": 20,
-  "lags_forecast_ratio": 4,
+  "lags_forecast_ratio": 1,
   "alpha": 0.0,
   "l1_ratio": 0.5,
   "use_exogenous": true,
