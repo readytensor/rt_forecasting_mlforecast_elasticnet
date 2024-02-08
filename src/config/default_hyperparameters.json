@@ -5,5 +5,4 @@
   "l1_ratio": 0.5,
   "use_exogenous": true,
   "random_state": 0
-  
 }
