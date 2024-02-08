@@ -168,15 +168,20 @@ class Forecaster:
                 data.drop(columns=self.data_schema.static_covariates, inplace=True)
 
         series_length = (
-            self.history_length
-            if self.history_length
-            else data.groupby(self.data_schema.id_col)[self.data_schema.target]
+            data.groupby(self.data_schema.id_col)[self.data_schema.target]
             .count()
             .iloc[0]
         )
+
         if series_length < 2 * self.data_schema.forecast_length:
             raise ValueError(
                 f"Training series is too short. History should be at least double the forecast horizon. history_length = ({series_length}), forecast horizon = ({self.data_schema.forecast_length})"
+            )
+
+        if self.lags[-1] > series_length:
+            self.lags = [i for i in range(1, series_length)]
+            logger.warning(
+                f"The provided lags value is greater than the available history length. Lags are set to to history length = {series_length}"
             )
 
         return data
@@ -199,12 +204,6 @@ class Forecaster:
             static_features = []
 
         history = self.prepare_data(history)
-
-        if self.lags[-1] > len(history):
-            self.lags = [i for i in range(1, len(history))]
-            logger.warning(
-                f"The provided lags value is greater than the available history length. Lags are set to to history length = {len(history)}"
-            )
 
         self.model = MLForecast(
             models=self.models,
