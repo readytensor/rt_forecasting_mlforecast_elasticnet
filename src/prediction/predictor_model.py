@@ -9,6 +9,7 @@ from sklearn.exceptions import NotFittedError
 from mlforecast import MLForecast
 from sklearn.linear_model import ElasticNet
 from mlforecast.target_transforms import LocalMinMaxScaler
+
 from logger import get_logger
 
 warnings.filterwarnings("ignore")
@@ -31,7 +32,7 @@ class Forecaster:
         self,
         data_schema: ForecastingSchema,
         history_forecast_ratio: int = None,
-        lags_forecast_ratio: Union[int, float] = None,
+        lags_forecast_ratio: int = None,
         lags: Optional[Iterable] = None,
         alpha: float = 1.0,
         l1_ratio: float = 0.5,
@@ -165,6 +166,18 @@ class Forecaster:
 
             if self.data_schema.static_covariates:
                 data.drop(columns=self.data_schema.static_covariates, inplace=True)
+
+        series_length = (
+            self.history_length
+            if self.history_length
+            else data.groupby(self.data_schema.id_col)[self.data_schema.target]
+            .count()
+            .iloc[0]
+        )
+        if series_length < 2 * self.data_schema.forecast_length:
+            raise ValueError(
+                f"Training series is too short. History should be at least double the forecast horizon. history_length = ({series_length}), forecast horizon = ({self.data_schema.forecast_length})"
+            )
 
         return data
 
